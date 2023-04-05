@@ -509,5 +509,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c020971fd03663b48ac94848f4d4cf0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementControls: {fileID: 5024083743693377488, guid: 8a69dd345d825644195af21c0dcb1bac, type: 3}
-  inputValues: {x: 0, y: 0}
+  speedMultiplier: 0.05
