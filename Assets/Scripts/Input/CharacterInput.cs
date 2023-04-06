@@ -1,56 +1,78 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class CharacterInput : MonoBehaviour
 {
     [SerializeField] private InputActionReference moveAction;
+    [SerializeField] private InputActionReference sprintAction;
+    [SerializeField] private InputActionReference jumpAction;
     [SerializeField] private Rigidbody characterRigidbody;
     [SerializeField] private Animator characterAnimator;
-    [SerializeField] private float speedMultiplier;
+    [SerializeField] private float characterSpeed;
     [SerializeField] private Vector2 inputValues;
 
     void OnEnable()
     {
         moveAction.action.performed += MovePlayer;
+        sprintAction.action.performed += SprintPlayer;
+        jumpAction.action.performed += Jump;
     }
     void OnDisable()
     {
         moveAction.action.performed -= MovePlayer;
+        sprintAction.action.performed -= SprintPlayer;
+        jumpAction.action.performed -= Jump;
     }
     private void MovePlayer(InputAction.CallbackContext context)
     {
         inputValues = context.ReadValue<Vector2>();
-        LerpAnimation(context);
+        LerpWalkAnimation(context);
+    }
+    private void SprintPlayer(InputAction.CallbackContext context)
+    {
+        inputValues = context.ReadValue<Vector2>();
+        LerpSprintAnimation(context);
     }
     void FixedUpdate()
     {
-        var pos = transform.position;
-        pos = new Vector3(pos.x + (inputValues.x * speedMultiplier),0,pos.z + (inputValues.y * speedMultiplier));
-        transform.position = pos;
+        characterRigidbody.velocity = new Vector3(inputValues.x,0,inputValues.y) * characterSpeed;
     }
-    private void LerpAnimation(InputAction.CallbackContext context)
+    private void LerpWalkAnimation(InputAction.CallbackContext context)
     {
         var inputVal = context.action.ReadValue<Vector2>();
         if (inputVal != Vector2.zero)
         {
             StopAllCoroutines();
-            StartCoroutine(LerpBlend(0f, 0.3f));
+            StartCoroutine(LerpBlend(0f, 0.3f, 0.5f));
         }
         else
         {
             StopAllCoroutines();
-            StartCoroutine(LerpBlend(0.3f,0f));
+            StartCoroutine(LerpBlend(0.3f,0f, 0.5f));
         }
     }
-    private IEnumerator LerpBlend(float from, float to)
+    private void LerpSprintAnimation(InputAction.CallbackContext context)
+    {
+        var inputVal = context.action.ReadValue<Vector2>();
+        if (inputVal != Vector2.zero)
+        {
+            StopAllCoroutines();
+            StartCoroutine(LerpBlend(0.3f, 0.6f, 0.5f));
+        }
+        else
+        {
+            Debug.Log("Sprint to IDLE");
+            StopAllCoroutines();
+            StartCoroutine(LerpBlend(0.6f,0f,1f));
+        }
+    }
+    private IEnumerator LerpBlend(float from, float to, float time)
     {
         float timeElapsed = 0;
-        var totalTime = 0.3f;
-        while (timeElapsed < totalTime)
+        while (timeElapsed < time)
         {
-            characterAnimator.SetFloat("horizontalMovement", Mathf.Lerp(from, to, timeElapsed / totalTime));
+            characterAnimator.SetFloat("horizontalMovement", Mathf.Lerp(from, to, timeElapsed / time));
             timeElapsed += Time.deltaTime;
             yield return null;
         }

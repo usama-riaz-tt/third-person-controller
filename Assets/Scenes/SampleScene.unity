@@ -294,7 +294,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: -0.12311683, y: 0.86393404, z: -0.4160595, w: -0.25564587}
-  m_LocalPosition: {x: 2.8787923, y: 4.2613754, z: 3.6768208}
+  m_LocalPosition: {x: 4.63, y: 13.35, z: 12.88}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -540,12 +540,28 @@ PrefabInstance:
       value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 2627469718878596556, guid: 68e1c427fa4993a46a960b4d4990b9ac, type: 3}
+      propertyPath: jumpAction
+      value: 
+      objectReference: {fileID: -8361232621732851459, guid: 8a69dd345d825644195af21c0dcb1bac, type: 3}
+    - target: {fileID: 2627469718878596556, guid: 68e1c427fa4993a46a960b4d4990b9ac, type: 3}
       propertyPath: moveAction
       value: 
       objectReference: {fileID: 5024083743693377488, guid: 8a69dd345d825644195af21c0dcb1bac, type: 3}
     - target: {fileID: 2627469718878596556, guid: 68e1c427fa4993a46a960b4d4990b9ac, type: 3}
+      propertyPath: sprintAction
+      value: 
+      objectReference: {fileID: -6774253673990564086, guid: 8a69dd345d825644195af21c0dcb1bac, type: 3}
+    - target: {fileID: 2627469718878596556, guid: 68e1c427fa4993a46a960b4d4990b9ac, type: 3}
+      propertyPath: characterSpeed
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 2627469718878596556, guid: 68e1c427fa4993a46a960b4d4990b9ac, type: 3}
       propertyPath: moveAction.m_Id
       value: e8591efa-fad5-4f67-8731-f0cb32939658
+      objectReference: {fileID: 0}
+    - target: {fileID: 2627469718878596556, guid: 68e1c427fa4993a46a960b4d4990b9ac, type: 3}
+      propertyPath: speedMultiplier
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 2627469718878596556, guid: 68e1c427fa4993a46a960b4d4990b9ac, type: 3}
       propertyPath: moveAction.m_Name
