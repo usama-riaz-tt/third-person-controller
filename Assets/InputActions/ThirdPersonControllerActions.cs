@@ -34,7 +34,7 @@ public partial class @ThirdPersonControllerActions: IInputActionCollection2, IDi
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""Jump"",
@@ -47,9 +47,9 @@ public partial class @ThirdPersonControllerActions: IInputActionCollection2, IDi
                 },
                 {
                     ""name"": ""Sprint"",
-                    ""type"": ""PassThrough"",
+                    ""type"": ""Button"",
                     ""id"": ""09740f6a-01d9-4ef6-983b-cdd84a9134b1"",
-                    ""expectedControlType"": ""Vector2"",
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
@@ -125,8 +125,8 @@ public partial class @ThirdPersonControllerActions: IInputActionCollection2, IDi
                 {
                     ""name"": ""WASD"",
                     ""id"": ""34955cba-107e-4b5d-a28e-3ba6ea1e3600"",
-                    ""path"": ""2DVector"",
-                    ""interactions"": ""Hold"",
+                    ""path"": ""2DVector(mode=2)"",
+                    ""interactions"": ""Hold(duration=1.5)"",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Sprint"",
