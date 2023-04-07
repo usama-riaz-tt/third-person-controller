@@ -32,10 +32,10 @@ public class CharacterInput : MonoBehaviour
     void FixedUpdate()
     {
         characterRigidbody.velocity = new Vector3(inputValues.x,0,inputValues.y) * characterSpeed;
-        if (!_isGrounded)
-        {
-            GroundCheck();
-        }
+        // if (!_isGrounded)
+        // {
+        //     GroundCheck();
+        // }
     }
     private void WalkPlayer(InputAction.CallbackContext context)
     {
