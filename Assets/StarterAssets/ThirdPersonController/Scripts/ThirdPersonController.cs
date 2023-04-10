@@ -1,4 +1,5 @@
-﻿ using UnityEngine;
+﻿ using System.Collections;
+ using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
@@ -105,6 +106,8 @@ namespace StarterAssets
         private int _animIDJump;
         private int _animIDFreeFall;
         private int _animIDMotionSpeed;
+        private int _animIDCrouching;
+        private int _animIDRolling;
 
 
         private GameObject _mainCamera;
@@ -152,9 +155,10 @@ namespace StarterAssets
         private void Update()
         {
             _hasAnimator = TryGetComponent(out _animator);
-
+            Roll();
             JumpAndGravity();
             GroundedCheck();
+            Crouching();
             Move();
         }
 
@@ -166,6 +170,8 @@ namespace StarterAssets
         private void AssignAnimationIDs()
         {
             _animIDSpeed = Animator.StringToHash("Speed");
+            _animIDCrouching = Animator.StringToHash("Crouching");
+            _animIDRolling = Animator.StringToHash("Rolling");
             _animIDGrounded = Animator.StringToHash("Grounded");
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
@@ -260,8 +266,6 @@ namespace StarterAssets
                 // rotate to face input direction relative to camera position
                 transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
             }
-
-
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
 
             // move the player
@@ -275,7 +279,61 @@ namespace StarterAssets
                 _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
             }
         }
+        private void Crouching()
+        {
+            if (_hasAnimator)
+            {
+                if (_input.crouch)
+                {
+                    _animator.SetBool(_animIDCrouching, true);
+                    _controller.center = new Vector3(0,0.64f,0);
+                    _controller.height = 1.25f;
+                }
+                else
+                {
+                    _animator.SetBool(_animIDCrouching, false);
+                    _controller.center = new Vector3(0,0.87f,0);
+                    _controller.height = 1.8f;
+                }
+            }
+        }
 
+        private void Roll()
+        {
+            Debug.Log(_input.roll);
+            if (_hasAnimator)
+            {
+                if (_input.roll)
+                {
+                    _input.move = Vector2.zero;
+                    _animator.SetBool(_animIDRolling, true); 
+                    StartCoroutine(RollingSequence());
+                }
+                else
+                {
+                    _animator.SetBool(_animIDRolling,false);
+                }
+            }
+            _input.roll = false;
+        }
+
+        private IEnumerator RollingSequence()
+        {
+            
+            Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+            Debug.Log(targetDirection);
+            var totalTime = 0.5f;
+            var timeElapsed = 0f;
+            while (timeElapsed < totalTime)
+            {
+                Debug.Log("YO");
+                _controller.Move(targetDirection.normalized * (_speed * 1.5f) +
+                                 new Vector3(0.0f, _verticalVelocity, 0.0f));
+                timeElapsed += Time.deltaTime;
+                yield return null;
+            }
+            yield return null;
+        }
         private void JumpAndGravity()
         {
             if (Grounded)
@@ -305,6 +363,7 @@ namespace StarterAssets
                     // update animator if using character
                     if (_hasAnimator)
                     {
+                        _animator.SetBool(_animIDCrouching, false);
                         _animator.SetBool(_animIDJump, true);
                     }
                 }
@@ -330,6 +389,7 @@ namespace StarterAssets
                     // update animator if using character
                     if (_hasAnimator)
                     {
+                        _animator.SetBool(_animIDCrouching, false);
                         _animator.SetBool(_animIDFreeFall, true);
                     }
                 }
@@ -365,7 +425,6 @@ namespace StarterAssets
                 new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z),
                 GroundedRadius);
         }
-
         private void OnFootstep(AnimationEvent animationEvent)
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)
@@ -377,7 +436,6 @@ namespace StarterAssets
                 }
             }
         }
-
         private void OnLand(AnimationEvent animationEvent)
         {
             if (animationEvent.animatorClipInfo.weight > 0.5f)

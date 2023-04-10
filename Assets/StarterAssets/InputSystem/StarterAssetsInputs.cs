@@ -12,6 +12,8 @@ namespace StarterAssets
 		public Vector2 look;
 		public bool jump;
 		public bool sprint;
+		public bool crouch;
+		public bool roll;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -43,6 +45,16 @@ namespace StarterAssets
 		{
 			SprintInput(value.isPressed);
 		}
+
+		public void OnCrouch(InputValue value)
+		{
+			CrouchInput(value.isPressed);
+		}
+
+		public void OnRoll(InputValue value)
+		{
+			RollInput(value.isPressed);
+		}
 #endif
 
 
@@ -64,6 +76,23 @@ namespace StarterAssets
 		public void SprintInput(bool newSprintState)
 		{
 			sprint = newSprintState;
+		}
+
+		public void CrouchInput(bool newCrouchState)
+		{
+			if (crouch == newCrouchState)
+			{
+				crouch = !newCrouchState;
+			}
+			else
+			{
+				crouch = newCrouchState;
+			}
+		}
+
+		public void RollInput(bool newRollState)
+		{
+			roll = newRollState;
 		}
 
 		private void OnApplicationFocus(bool hasFocus)
