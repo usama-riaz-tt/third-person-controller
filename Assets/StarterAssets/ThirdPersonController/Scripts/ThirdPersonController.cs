@@ -10,6 +10,7 @@ using UnityEngine.InputSystem;
 namespace StarterAssets
 {
     [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(Animator))]
 #if ENABLE_INPUT_SYSTEM 
     [RequireComponent(typeof(PlayerInput))]
 #endif
@@ -19,6 +20,7 @@ namespace StarterAssets
         [SerializeField] private CharacterController _controller;
         [SerializeField] private Animator _animator;
         [SerializeField] private StarterAssetsInputs _input;
+        [SerializeField] private EnvironmentChecking _environmentChecking;
 #if ENABLE_INPUT_SYSTEM 
         [SerializeField] private PlayerInput _playerInput;
 #endif
@@ -108,6 +110,7 @@ namespace StarterAssets
         private int _animIDMotionSpeed;
         private int _animIDCrouching;
         private int _animIDRolling;
+        private int _animIDParkourJump;
 
 
         private GameObject _mainCamera;
@@ -115,6 +118,8 @@ namespace StarterAssets
         private const float _threshold = 0.01f;
 
         private bool _hasAnimator;
+
+        private EnvironmentChecking.ObstacleInfo _obstacleInfo;
 
         private bool IsCurrentDeviceMouse
         {
@@ -155,7 +160,7 @@ namespace StarterAssets
         private void Update()
         {
             _hasAnimator = TryGetComponent(out _animator);
-            Roll();
+            CheckForObstacles();
             JumpAndGravity();
             GroundedCheck();
             Crouching();
@@ -167,6 +172,11 @@ namespace StarterAssets
             CameraRotation();
         }
 
+        private void CheckForObstacles()
+        {
+            _obstacleInfo = _environmentChecking.CheckObstacle();
+        }
+
         private void AssignAnimationIDs()
         {
             _animIDSpeed = Animator.StringToHash("Speed");
@@ -174,6 +184,7 @@ namespace StarterAssets
             _animIDRolling = Animator.StringToHash("Rolling");
             _animIDGrounded = Animator.StringToHash("Grounded");
             _animIDJump = Animator.StringToHash("Jump");
+            _animIDParkourJump = Animator.StringToHash("ParkourJump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
         }
@@ -298,25 +309,6 @@ namespace StarterAssets
             }
         }
 
-        private void Roll()
-        {
-            Debug.Log(_input.roll);
-            if (_hasAnimator)
-            {
-                if (_input.roll)
-                {
-                    _input.move = Vector2.zero;
-                    _animator.SetBool(_animIDRolling, true); 
-                    StartCoroutine(RollingSequence());
-                }
-                else
-                {
-                    _animator.SetBool(_animIDRolling,false);
-                }
-            }
-            _input.roll = false;
-        }
-
         private IEnumerator RollingSequence()
         {
             
@@ -334,6 +326,23 @@ namespace StarterAssets
             }
             yield return null;
         }
+
+        void OnAnimatorMove()
+        {
+            if (_animator && _obstacleInfo.HitFound && _input.jump)
+            {
+                Vector3 newPosition = transform.position;
+                newPosition.z += 5f * Time.deltaTime;
+                transform.position = newPosition;
+            }
+        }
+        private IEnumerator JumpUpward()
+        {
+            _animator.SetBool(_animIDParkourJump, true);
+            _animator.applyRootMotion = true;
+            var animationState = _animator.GetNextAnimatorStateInfo(0);
+            yield return new WaitForSeconds(animationState.length);
+        }
         private void JumpAndGravity()
         {
             if (Grounded)
@@ -344,6 +353,8 @@ namespace StarterAssets
                 // update animator if using character
                 if (_hasAnimator)
                 {
+                    _animator.applyRootMotion = false;
+                    _animator.SetBool(_animIDParkourJump, false);
                     _animator.SetBool(_animIDJump, false);
                     _animator.SetBool(_animIDFreeFall, false);
                 }
@@ -364,7 +375,14 @@ namespace StarterAssets
                     if (_hasAnimator)
                     {
                         _animator.SetBool(_animIDCrouching, false);
-                        _animator.SetBool(_animIDJump, true);
+                        if (_obstacleInfo.HitFound)
+                        {
+                            StartCoroutine(JumpUpward());
+                        }
+                        else
+                        {
+                            _animator.SetBool(_animIDJump, true);
+                        }
                     }
                 }
 
