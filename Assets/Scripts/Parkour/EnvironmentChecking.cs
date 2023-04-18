@@ -6,7 +6,11 @@ public class EnvironmentChecking : MonoBehaviour
    [SerializeField] private float rayLength;
    [SerializeField] private float heightRayLength;
    [SerializeField] private LayerMask obstacleLayer;
-
+   [SerializeField] private float minimumHeight;
+   [SerializeField] private float maximumHeightForVaulting;
+   [SerializeField] private float maximumHeightForClimbingUpwards;
+   [SerializeField] private float maximumHeightForStandardClimbing;
+   private float _heightDifference;
    public ObstacleInfo CheckObstacle()
    {
       var hitData = new ObstacleInfo();
@@ -21,7 +25,35 @@ public class EnvironmentChecking : MonoBehaviour
       Debug.DrawRay(rayOrigin, transform.forward*rayLength, hitData.HitFound ? Color.blue : Color.red);
       return hitData;
    }
+   public bool CheckForHeight(ObstacleInfo obstacleInfo, Transform player)
+   {
+      _heightDifference = obstacleInfo.HeightInfo.point.y - player.position.y;
+      return !(_heightDifference < minimumHeight) && !(_heightDifference > maximumHeightForVaulting);
+   }
+   public float GetHeightDifference()
+   {
+      return _heightDifference;
+   }
+   public float GetMaximumHeightForStandardClimbing()
+   {
+      return maximumHeightForStandardClimbing;
+   }
 
+   public float GetMinimumHeight()
+   {
+      return minimumHeight;
+   }
+   public float GetMaximumHeightForVaulting()
+   {
+      return maximumHeightForVaulting;
+   }public float GetMaximumHeightForClimbingUpwards()
+   {
+      return maximumHeightForClimbingUpwards;
+   }
+   public float GetRayLength()
+   {
+      return rayLength;
+   }
    public struct ObstacleInfo
    {
       public bool HitFound;

@@ -1,4 +1,5 @@
 ﻿ using System.Collections;
+ using System.Collections.Generic;
  using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
@@ -21,6 +22,7 @@ namespace StarterAssets
         [SerializeField] private Animator _animator;
         [SerializeField] private StarterAssetsInputs _input;
         [SerializeField] private EnvironmentChecking _environmentChecking;
+        [SerializeField] private List<ParkourAction> _parkourActions;
 #if ENABLE_INPUT_SYSTEM 
         [SerializeField] private PlayerInput _playerInput;
 #endif
@@ -101,6 +103,7 @@ namespace StarterAssets
         // timeout deltatime
         private float _jumpTimeoutDelta;
         private float _fallTimeoutDelta;
+        //
 
         // animation IDs
         private int _animIDSpeed;
@@ -110,7 +113,9 @@ namespace StarterAssets
         private int _animIDMotionSpeed;
         private int _animIDCrouching;
         private int _animIDRolling;
-        private int _animIDParkourJump;
+        private int _animIDParkourJumpClimb;
+        private int _animIDParkourLedgeGrabClimb;
+        private int _animIDParkourJumpAbove;
 
 
         private GameObject _mainCamera;
@@ -118,6 +123,8 @@ namespace StarterAssets
         private const float _threshold = 0.01f;
 
         private bool _hasAnimator;
+        private bool _jumpingOverObstacle;
+        private bool _climbingUpObstacle;
 
         private EnvironmentChecking.ObstacleInfo _obstacleInfo;
 
@@ -184,9 +191,11 @@ namespace StarterAssets
             _animIDRolling = Animator.StringToHash("Rolling");
             _animIDGrounded = Animator.StringToHash("Grounded");
             _animIDJump = Animator.StringToHash("Jump");
-            _animIDParkourJump = Animator.StringToHash("ParkourJump");
+            _animIDParkourJumpClimb = Animator.StringToHash("ParkourJumpClimb");
+            _animIDParkourJumpAbove = Animator.StringToHash("ParkourJumpAbove");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            _animIDParkourLedgeGrabClimb = Animator.StringToHash("ParkourClimb");
         }
 
         private void GroundedCheck()
@@ -308,17 +317,14 @@ namespace StarterAssets
                 }
             }
         }
-
         private IEnumerator RollingSequence()
         {
-            
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
             Debug.Log(targetDirection);
             var totalTime = 0.5f;
             var timeElapsed = 0f;
             while (timeElapsed < totalTime)
             {
-                Debug.Log("YO");
                 _controller.Move(targetDirection.normalized * (_speed * 1.5f) +
                                  new Vector3(0.0f, _verticalVelocity, 0.0f));
                 timeElapsed += Time.deltaTime;
@@ -326,22 +332,59 @@ namespace StarterAssets
             }
             yield return null;
         }
-
-        void OnAnimatorMove()
+        private IEnumerator JumpUpward(float height)
         {
-            if (_animator && _obstacleInfo.HitFound && _input.jump)
-            {
-                Vector3 newPosition = transform.position;
-                newPosition.z += 5f * Time.deltaTime;
-                transform.position = newPosition;
-            }
-        }
-        private IEnumerator JumpUpward()
-        {
-            _animator.SetBool(_animIDParkourJump, true);
-            _animator.applyRootMotion = true;
             var animationState = _animator.GetNextAnimatorStateInfo(0);
-            yield return new WaitForSeconds(animationState.length);
+            var totalTime = animationState.length;
+            if (height < _environmentChecking.GetMaximumHeightForStandardClimbing())
+            {
+                if (height > _environmentChecking.GetMaximumHeightForClimbingUpwards())
+                {
+                    _animator.SetBool(_animIDParkourLedgeGrabClimb, true);  
+                }
+                else
+                {
+                    _animator.SetBool(_animIDParkourJumpClimb, true);
+                }
+            }
+            else
+            {
+                yield return null;
+            }
+            float timeElapsed = 0;
+            while (timeElapsed < totalTime)
+            {
+                Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+                _controller.Move(targetDirection.normalized * (0.1f * Time.deltaTime));
+                timeElapsed += Time.deltaTime;
+                yield return null;
+            }
+            _jumpingOverObstacle = false;
+            _climbingUpObstacle = false;
+        }
+        private IEnumerator JumpAbove()
+        {
+            _animator.SetBool(_animIDParkourJumpAbove, true);
+            var animationState = _animator.GetNextAnimatorStateInfo(0);
+            float timeElapsed = 0;
+            var totalTime = animationState.length;
+            var normal = _obstacleInfo.HitInfo.normal;
+            normal = new Vector3(Mathf.Abs(normal.x),Mathf.Abs(normal.y),Mathf.Abs(normal.z));
+            var addedDistance = Vector3.Dot(_obstacleInfo.HitInfo.collider.transform.localScale, normal);
+            float distanceToJump = _obstacleInfo.HitInfo.point.x + addedDistance;;
+            while (timeElapsed < totalTime)
+            {
+                Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+                _controller.Move(targetDirection.normalized * (distanceToJump * Time.deltaTime));
+                timeElapsed += Time.deltaTime;
+                yield return null;
+            }
+            _jumpingOverObstacle = false;
+            _climbingUpObstacle = false;
+        }
+        private IEnumerator ClimbUpBigObstacle()
+        {
+            yield return null;
         }
         private void JumpAndGravity()
         {
@@ -354,7 +397,9 @@ namespace StarterAssets
                 if (_hasAnimator)
                 {
                     _animator.applyRootMotion = false;
-                    _animator.SetBool(_animIDParkourJump, false);
+                    _animator.SetBool(_animIDParkourJumpAbove, false);
+                    _animator.SetBool(_animIDParkourJumpClimb, false);
+                    _animator.SetBool(_animIDParkourLedgeGrabClimb, false);
                     _animator.SetBool(_animIDJump, false);
                     _animator.SetBool(_animIDFreeFall, false);
                 }
@@ -368,21 +413,49 @@ namespace StarterAssets
                 // Jump
                 if (_input.jump && _jumpTimeoutDelta <= 0.0f)
                 {
-                    // the square root of H * -2 * G = how much velocity needed to reach desired height
-                    _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-
                     // update animator if using character
                     if (_hasAnimator)
                     {
                         _animator.SetBool(_animIDCrouching, false);
                         if (_obstacleInfo.HitFound)
                         {
-                            StartCoroutine(JumpUpward());
+                            if (_obstacleInfo.HeightInfo.point.y < _environmentChecking.GetMaximumHeightForStandardClimbing())
+                            {
+                                if (_obstacleInfo.HeightInfo.point.y > _environmentChecking.GetMaximumHeightForVaulting())
+                                {
+                                    _climbingUpObstacle = true;
+                                }
+                                else
+                                {
+                                    _jumpingOverObstacle = true;
+                                }
+                            }
+                            if (_jumpingOverObstacle)
+                            {
+                                StartCoroutine(JumpAbove());
+                            }
+                            if (_climbingUpObstacle)
+                            {
+                                StartCoroutine(JumpUpward(_obstacleInfo.HeightInfo.point.y));
+                            }
                         }
                         else
                         {
                             _animator.SetBool(_animIDJump, true);
                         }
+                    }
+                    if (_jumpingOverObstacle)
+                    {
+                        _verticalVelocity = Mathf.Sqrt((_obstacleInfo.HeightInfo.point.y + 0.25f) * -2f * Gravity);
+                    }
+
+                    if (_climbingUpObstacle)
+                    {
+                        _verticalVelocity = Mathf.Sqrt(((_obstacleInfo.HeightInfo.point.y) + 0.25f) * -2f * Gravity);
+                    }
+                    else
+                    {
+                        _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
                     }
                 }
 
