@@ -123,8 +123,6 @@ namespace StarterAssets
         private const float _threshold = 0.01f;
 
         private bool _hasAnimator;
-        private bool _jumpingOverObstacle;
-        private bool _climbingUpObstacle;
 
         private EnvironmentChecking.ObstacleInfo _obstacleInfo;
 
@@ -317,75 +315,6 @@ namespace StarterAssets
                 }
             }
         }
-        private IEnumerator RollingSequence()
-        {
-            Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
-            Debug.Log(targetDirection);
-            var totalTime = 0.5f;
-            var timeElapsed = 0f;
-            while (timeElapsed < totalTime)
-            {
-                _controller.Move(targetDirection.normalized * (_speed * 1.5f) +
-                                 new Vector3(0.0f, _verticalVelocity, 0.0f));
-                timeElapsed += Time.deltaTime;
-                yield return null;
-            }
-            yield return null;
-        }
-        private IEnumerator JumpUpward(float height)
-        {
-            var animationState = _animator.GetNextAnimatorStateInfo(0);
-            var totalTime = animationState.length;
-            if (height < _environmentChecking.GetMaximumHeightForStandardClimbing())
-            {
-                if (height > _environmentChecking.GetMaximumHeightForClimbingUpwards())
-                {
-                    _animator.SetBool(_animIDParkourLedgeGrabClimb, true);  
-                }
-                else
-                {
-                    _animator.SetBool(_animIDParkourJumpClimb, true);
-                }
-            }
-            else
-            {
-                yield return null;
-            }
-            float timeElapsed = 0;
-            while (timeElapsed < totalTime)
-            {
-                Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
-                _controller.Move(targetDirection.normalized * (0.1f * Time.deltaTime));
-                timeElapsed += Time.deltaTime;
-                yield return null;
-            }
-            _jumpingOverObstacle = false;
-            _climbingUpObstacle = false;
-        }
-        private IEnumerator JumpAbove()
-        {
-            _animator.SetBool(_animIDParkourJumpAbove, true);
-            var animationState = _animator.GetNextAnimatorStateInfo(0);
-            float timeElapsed = 0;
-            var totalTime = animationState.length;
-            var normal = _obstacleInfo.HitInfo.normal;
-            normal = new Vector3(Mathf.Abs(normal.x),Mathf.Abs(normal.y),Mathf.Abs(normal.z));
-            var addedDistance = Vector3.Dot(_obstacleInfo.HitInfo.collider.transform.localScale, normal);
-            float distanceToJump = _obstacleInfo.HitInfo.point.x + addedDistance;;
-            while (timeElapsed < totalTime)
-            {
-                Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
-                _controller.Move(targetDirection.normalized * (distanceToJump * Time.deltaTime));
-                timeElapsed += Time.deltaTime;
-                yield return null;
-            }
-            _jumpingOverObstacle = false;
-            _climbingUpObstacle = false;
-        }
-        private IEnumerator ClimbUpBigObstacle()
-        {
-            yield return null;
-        }
         private void JumpAndGravity()
         {
             if (Grounded)
@@ -403,62 +332,36 @@ namespace StarterAssets
                     _animator.SetBool(_animIDJump, false);
                     _animator.SetBool(_animIDFreeFall, false);
                 }
-
                 // stop our velocity dropping infinitely when grounded
                 if (_verticalVelocity < 0.0f)
                 {
                     _verticalVelocity = -2f;
                 }
-
                 // Jump
                 if (_input.jump && _jumpTimeoutDelta <= 0.0f)
                 {
                     // update animator if using character
                     if (_hasAnimator)
                     {
-                        _animator.SetBool(_animIDCrouching, false);
-                        if (_obstacleInfo.HitFound)
+                        for (int i = 0; i < _parkourActions.Count + 1; i++)
                         {
-                            if (_obstacleInfo.HeightInfo.point.y < _environmentChecking.GetMaximumHeightForStandardClimbing())
+                            if (i == _parkourActions.Count)
                             {
-                                if (_obstacleInfo.HeightInfo.point.y > _environmentChecking.GetMaximumHeightForVaulting())
-                                {
-                                    _climbingUpObstacle = true;
-                                }
-                                else
-                                {
-                                    _jumpingOverObstacle = true;
-                                }
+                                _animator.SetBool(_animIDJump, true);
+                                _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
                             }
-                            if (_jumpingOverObstacle)
+                            else
                             {
-                                StartCoroutine(JumpAbove());
-                            }
-                            if (_climbingUpObstacle)
-                            {
-                                StartCoroutine(JumpUpward(_obstacleInfo.HeightInfo.point.y));
+                                if (_parkourActions[i].CheckIfAvailableAction(_obstacleInfo, this.transform))
+                                {
+                                    _verticalVelocity = _parkourActions[i].SetVerticalVelocity(JumpHeight, Gravity);
+                                    StartCoroutine(_parkourActions[i].PerformParkourAction(_animator, _controller, _targetRotation));
+                                    break;
+                                }
                             }
                         }
-                        else
-                        {
-                            _animator.SetBool(_animIDJump, true);
-                        }
-                    }
-                    if (_jumpingOverObstacle)
-                    {
-                        _verticalVelocity = Mathf.Sqrt((_obstacleInfo.HeightInfo.point.y + 0.25f) * -2f * Gravity);
-                    }
-
-                    if (_climbingUpObstacle)
-                    {
-                        _verticalVelocity = Mathf.Sqrt(((_obstacleInfo.HeightInfo.point.y) + 0.25f) * -2f * Gravity);
-                    }
-                    else
-                    {
-                        _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
                     }
                 }
-
                 // jump timeout
                 if (_jumpTimeoutDelta >= 0.0f)
                 {
@@ -484,33 +387,27 @@ namespace StarterAssets
                         _animator.SetBool(_animIDFreeFall, true);
                     }
                 }
-
                 // if we are not grounded, do not jump
                 _input.jump = false;
             }
-
             // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
             if (_verticalVelocity < _terminalVelocity)
             {
                 _verticalVelocity += Gravity * Time.deltaTime;
             }
         }
-
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
         {
             if (lfAngle < -360f) lfAngle += 360f;
             if (lfAngle > 360f) lfAngle -= 360f;
             return Mathf.Clamp(lfAngle, lfMin, lfMax);
         }
-
         private void OnDrawGizmosSelected()
         {
             Color transparentGreen = new Color(0.0f, 1.0f, 0.0f, 0.35f);
             Color transparentRed = new Color(1.0f, 0.0f, 0.0f, 0.35f);
-
             if (Grounded) Gizmos.color = transparentGreen;
             else Gizmos.color = transparentRed;
-
             // when selected, draw a gizmo in the position of, and matching radius of, the grounded collider
             Gizmos.DrawSphere(
                 new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z),
