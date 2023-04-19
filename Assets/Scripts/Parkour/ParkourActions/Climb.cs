@@ -1,12 +1,14 @@
 using System.Collections;
-using System.Collections.Generic;
+using StarterAssets;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [CreateAssetMenu(menuName = "New Parkour Action/Climb", fileName = "Climb")]
 public class Climb : ParkourAction
 {
-    public override IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation)
+    public override IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation, PlayerInput input)
     {
+        input.enabled = false;
         var animationState = animator.GetNextAnimatorStateInfo(0);
         var totalTime = animationState.length;
         animator.SetBool(AnimationTriggerName, true);
@@ -18,6 +20,8 @@ public class Climb : ParkourAction
             timeElapsed += Time.deltaTime;
             yield return null;
         }
+
+        input.enabled = true;
     }
 
     public override float SetVerticalVelocity(float jumpHeight, float gravity)

@@ -1,12 +1,14 @@
 using System.Collections;
-using System.Collections.Generic;
+using StarterAssets;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [CreateAssetMenu(menuName = "New Parkour Action/Vault", fileName = "Vault")]
 public class Vault : ParkourAction
 {
-    public override IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation)
+    public override IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation, PlayerInput input)
     {
+        input.enabled = false;
         animator.SetBool(AnimationTriggerName, true);
         var animationState = animator.GetNextAnimatorStateInfo(0);
         float timeElapsed = 0;
@@ -22,9 +24,10 @@ public class Vault : ParkourAction
             timeElapsed += Time.deltaTime;
             yield return null;
         }
+        input.enabled = true;
     }
     public override float SetVerticalVelocity(float jumpHeight, float gravity)
     {
-        return Mathf.Sqrt(1.2f * -2f * gravity);
+        return Mathf.Sqrt(_obstacleInfo.HeightInfo.point.y * -2f * gravity);
     }
 }

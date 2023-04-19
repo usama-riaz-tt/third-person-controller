@@ -1,6 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
+using StarterAssets;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public abstract class ParkourAction : ScriptableObject
 {
@@ -19,6 +20,6 @@ public abstract class ParkourAction : ScriptableObject
         }
         return true;
     }
-    public abstract IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation);
+    public abstract IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation, PlayerInput input);
     public abstract float SetVerticalVelocity(float jumpHeight, float gravity);
 }

@@ -355,7 +355,7 @@ namespace StarterAssets
                                 if (_parkourActions[i].CheckIfAvailableAction(_obstacleInfo, this.transform))
                                 {
                                     _verticalVelocity = _parkourActions[i].SetVerticalVelocity(JumpHeight, Gravity);
-                                    StartCoroutine(_parkourActions[i].PerformParkourAction(_animator, _controller, _targetRotation));
+                                    StartCoroutine(_parkourActions[i].PerformParkourAction(_animator, _controller, _targetRotation, _playerInput));
                                     break;
                                 }
                             }
