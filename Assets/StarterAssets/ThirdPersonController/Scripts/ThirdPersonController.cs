@@ -116,6 +116,7 @@ namespace StarterAssets
         private int _animIDParkourJumpClimb;
         private int _animIDParkourLedgeGrabClimb;
         private int _animIDParkourJumpAbove;
+        private int _animIDParkourWallRun;
 
 
         private GameObject _mainCamera;
@@ -191,6 +192,7 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDParkourJumpClimb = Animator.StringToHash("ParkourJumpClimb");
             _animIDParkourJumpAbove = Animator.StringToHash("ParkourJumpAbove");
+            _animIDParkourWallRun = Animator.StringToHash("WallRun");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
             _animIDParkourLedgeGrabClimb = Animator.StringToHash("ParkourClimb");
@@ -331,6 +333,7 @@ namespace StarterAssets
                     _animator.SetBool(_animIDParkourLedgeGrabClimb, false);
                     _animator.SetBool(_animIDJump, false);
                     _animator.SetBool(_animIDFreeFall, false);
+                    _animator.SetBool(_animIDParkourWallRun, false);
                 }
                 // stop our velocity dropping infinitely when grounded
                 if (_verticalVelocity < 0.0f)

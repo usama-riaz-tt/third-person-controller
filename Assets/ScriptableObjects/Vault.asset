@@ -15,3 +15,6 @@ MonoBehaviour:
   MinimumHeight: 0.1
   MaximumHeight: 0.5
   AnimationTriggerName: ParkourJumpAbove
+  ObjectLayer:
+    serializedVersion: 2
+    m_Bits: 128
