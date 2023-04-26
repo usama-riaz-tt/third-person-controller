@@ -1,5 +1,6 @@
 ﻿ using System.Collections;
  using System.Collections.Generic;
+ using DitzelGames.FastIK;
  using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
@@ -23,6 +24,8 @@ namespace StarterAssets
         [SerializeField] private StarterAssetsInputs _input;
         [SerializeField] private EnvironmentChecking _environmentChecking;
         [SerializeField] private List<ParkourAction> _parkourActions;
+        [SerializeField] private FastIKFabric leftHand;
+        [SerializeField] private FastIKFabric rightHand;
 #if ENABLE_INPUT_SYSTEM 
         [SerializeField] private PlayerInput _playerInput;
 #endif
@@ -117,6 +120,7 @@ namespace StarterAssets
         private int _animIDParkourLedgeGrabClimb;
         private int _animIDParkourJumpAbove;
         private int _animIDParkourWallRun;
+        private int _animIDLedgeHang;
 
 
         private GameObject _mainCamera;
@@ -161,6 +165,8 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
+            leftHand.Target = null;
+            rightHand.Target = null;
         }
 
         private void Update()
@@ -196,6 +202,7 @@ namespace StarterAssets
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
             _animIDParkourLedgeGrabClimb = Animator.StringToHash("ParkourClimb");
+            _animIDLedgeHang = Animator.StringToHash("LedgeHang");
         }
 
         private void GroundedCheck()
@@ -334,6 +341,7 @@ namespace StarterAssets
                     _animator.SetBool(_animIDJump, false);
                     _animator.SetBool(_animIDFreeFall, false);
                     _animator.SetBool(_animIDParkourWallRun, false);
+                    _animator.SetBool(_animIDLedgeHang, false);
                 }
                 // stop our velocity dropping infinitely when grounded
                 if (_verticalVelocity < 0.0f)
@@ -357,8 +365,8 @@ namespace StarterAssets
                             {
                                 if (_parkourActions[i].CheckIfAvailableAction(_obstacleInfo, this.transform))
                                 {
+                                    StartCoroutine(_parkourActions[i].PerformParkourAction(_animator, _controller, _targetRotation, _playerInput,leftHand,rightHand));
                                     _verticalVelocity = _parkourActions[i].SetVerticalVelocity(JumpHeight, Gravity);
-                                    StartCoroutine(_parkourActions[i].PerformParkourAction(_animator, _controller, _targetRotation, _playerInput));
                                     break;
                                 }
                             }

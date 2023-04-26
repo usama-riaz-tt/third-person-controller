@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Climb
   m_EditorClassIdentifier: 
   MinimumHeight: 1
-  MaximumHeight: 3
+  MaximumHeight: 2.45
   AnimationTriggerName: ParkourClimb
   ObjectLayer:
     serializedVersion: 2

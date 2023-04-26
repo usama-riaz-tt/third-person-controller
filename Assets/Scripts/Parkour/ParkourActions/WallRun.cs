@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DitzelGames.FastIK;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,7 +10,7 @@ public class WallRun : ParkourAction
     public float JumpHeight;
     public float DistanceCovered;
     public override IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation,
-        PlayerInput input)
+        PlayerInput input, FastIKFabric leftHand, FastIKFabric rightHand)
     {
         input.enabled = false;
         animator.SetBool(AnimationTriggerName, true);

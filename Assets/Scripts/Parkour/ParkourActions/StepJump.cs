@@ -1,4 +1,5 @@
 using System.Collections;
+using DitzelGames.FastIK;
 using StarterAssets;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,7 +7,7 @@ using UnityEngine.InputSystem;
 [CreateAssetMenu(menuName = "New Parkour Action/StepJump", fileName = "StepJump")]
 public class StepJump : ParkourAction
 {
-    public override IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation, PlayerInput input)
+    public override IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation, PlayerInput input, FastIKFabric leftHand, FastIKFabric rightHand)
     {
         input.enabled = false;
         var animationState = animator.GetNextAnimatorStateInfo(0);

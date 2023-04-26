@@ -1,4 +1,5 @@
 using System.Collections;
+using DitzelGames.FastIK;
 using StarterAssets;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -22,6 +23,6 @@ public abstract class ParkourAction : ScriptableObject
         }
         return true;
     }
-    public abstract IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation, PlayerInput input);
+    public abstract IEnumerator PerformParkourAction(Animator animator, CharacterController controller, float targetRotation, PlayerInput input, FastIKFabric leftHand, FastIKFabric rightHand);
     public abstract float SetVerticalVelocity(float jumpHeight, float gravity);
 }
